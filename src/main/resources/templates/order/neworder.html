@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+        <html lang="en" xmlns:th="http://www.thymeleaf.org">
+        <head>
+        <meta charset="ISO-8859-1">
+        <title>Employee Management Subsystem</title>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+          crossorigin="anonymous">
+</head>
+<body>
+<div class="form-box">
+    <form th:action="@{/orders}" method="post">
+
+        <label>Buyer ID</label>
+        <input type="number" name="buyerId" required/>
+
+        <label>Order status</label>
+        <select name="orderStatus">
+            <option value="CREATED">CREATED</option>
+            <option value="PAID">PAID</option>
+            <option value="SHIPPED">SHIPPED</option>
+        </select>
+
+        <label>Payment option</label>
+        <select name="paymentOption">
+            <option value="CASH">CASH</option>
+            <option value="CARD">CARD</option>
+        </select>
+
+        <label>Delivery address ID</label>
+        <input type="number" name="deliveryAddressId" required/>
+
+        <label>Contact number</label>
+        <input type="text" name="contactNumber"/>
+
+        <label>Currency</label>
+        <input type="text" name="currency" value="EUR"/>
+
+        <label>Total price</label>
+        <input type="number" step="0.01" name="totalPrice"/>
+
+        <button type="submit">Create order</button>
+    </form>
+    <a th:href="@{/order/}" class="btn btn-primary btn-sm mb-3">
+        Back to list of orders</a>
+</div>
+</body>
+</html>

@@ -61,7 +61,7 @@ public class BuyerController {
 	}
 
 	@PostMapping("/save")
-	public String sabeBuyer(@ModelAttribute("buyer") Buyer buyer) {
+	public String saveBuyer(@ModelAttribute("buyer") Buyer buyer) {
 		this.buyerManager.save(buyer);
 		return "redirect:/buyer/";
 	}

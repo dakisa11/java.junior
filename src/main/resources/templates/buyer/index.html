@@ -27,7 +27,10 @@
             <td th:text="${buyer.firstName}"></td>
             <td th:text="${buyer.lastName}"></td>
             <td th:text="${buyer.title}"></td>
-            <td> <a th:href="@{/buyer/showFormForUpdate/{id}(id=${buyer.buyerId})}"
+            <td>
+                <a th:href="@{/order/{id}/orders(id=${buyer.buyerId})}"
+                   class="btn btn-optional">See orders</a>
+                <a th:href="@{/buyer/showFormForUpdate/{id}(id=${buyer.buyerId})}"
                     class="btn btn-primary">Update</a>
                 <a th:href="@{/buyer/deleteBuyer/{id}(id=${buyer.buyerId})}"
                    class="btn btn-danger">Delete</a>

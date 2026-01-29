@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="hr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Buyer Orders</title>
+</head>
+<body>
+
+<h1>Orders</h1>
+
+<div th:if="${#lists.isEmpty(orderList)}">
+    <p>No orders found.</p>
+</div>
+
+<div th:each="order : ${orderList}" class="order-box">
+
+    <h2>
+        Order #
+        <span th:text="${order.orderNr}"></span>
+    </h2>
+
+    <p>
+        <strong>Status:</strong>
+        <span th:text="${order.orderStatus}"></span>
+    </p>
+
+    <p>
+        <strong>Order time:</strong>
+        <span th:text="${order.orderTime}"></span>
+    </p>
+
+    <p>
+        <strong>Total price:</strong>
+        <span th:text="${order.totalPrice}"></span>
+        <span>EUR</span>
+    </p>
+
+    <h3>Delivery address</h3>
+
+    <div th:if="${order.deliveryAddress != null}">
+        <p>
+            <span th:text="${order.deliveryAddress.street}"></span>
+            <span th:text="${order.deliveryAddress.homeNumber}"></span>,
+            <span th:text="${order.deliveryAddress.city}"></span>
+        </p>
+    </div>
+
+    <div th:if="${order.deliveryAddress == null}">
+        <p>No delivery address</p>
+    </div>
+
+    <h3>Order items</h3>
+
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Price</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${order.orderItems}">
+            <td th:text="${item.itemNr}"></td>
+            <td th:text="${item.name}"></td>
+            <td th:text="${item.quantity}"></td>
+            <td th:text="${item.price}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<a href="/buyer">⬅ Back to buyers</a>
+
+</body>
+</html>

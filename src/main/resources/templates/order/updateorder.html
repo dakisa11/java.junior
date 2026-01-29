@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Order Management Subsystem</title>
+
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1>Order Management Subsystem</h1>
+    <hr>
+    <h2>Update existing order</h2>
+
+    <form action="#" th:action="@{/order/save}" th:object="${order}"
+          method="POST">
+
+        <button type="submit" class="btn btn-info col-2"> Update order</button>
+    </form>
+
+    <hr>
+
+    <a th:href = "@{/order/}"> Back to list of orders</a>
+</div>
+</body>
+</html>
