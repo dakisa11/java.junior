@@ -13,26 +13,41 @@
           crossorigin="anonymous">
 </head>
 <body>
-<div class="container">
-    <h1>Order Management Subsystem</h1>
-    <hr>
-    <h2>Add new order</h2>
+<div class="form-box">
+    <form th:action="@{/orders}" method="post">
 
-    <form action="#" th:action="@{/order/save}" th:object="${order}"
-          method="POST">
+        <label>Buyer ID</label>
+        <input type="number" name="buyerId" required/>
 
-        <button type="submit" class="btn btn-info col-2">Save Order</button>
+        <label>Order status</label>
+        <select name="orderStatus">
+            <option value="CREATED">CREATED</option>
+            <option value="PAID">PAID</option>
+            <option value="SHIPPED">SHIPPED</option>
+        </select>
+
+        <label>Payment option</label>
+        <select name="paymentOption">
+            <option value="CASH">CASH</option>
+            <option value="CARD">CARD</option>
+        </select>
+
+        <label>Delivery address ID</label>
+        <input type="number" name="deliveryAddressId" required/>
+
+        <label>Contact number</label>
+        <input type="text" name="contactNumber"/>
+
+        <label>Currency</label>
+        <input type="text" name="currency" value="EUR"/>
+
+        <label>Total price</label>
+        <input type="number" step="0.01" name="totalPrice"/>
+
+        <button type="submit">Create order</button>
     </form>
-
-    <hr>
-
-    <a th:href="@{/orders/}"> Back to list of orders</a>
+    <a th:href="@{/order/}" class="btn btn-primary btn-sm mb-3">
+        Back to list of orders</a>
 </div>
-</body>
-</html>
-</title>
-</head>
-<body>
-
 </body>
 </html>

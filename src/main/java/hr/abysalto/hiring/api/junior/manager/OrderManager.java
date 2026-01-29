@@ -7,5 +7,5 @@ public interface OrderManager {
     void save(Order order);
     Order getById(Long id);
     void deleteById(Long id);
-    Iterable<OrderViewDto> getAllBuyerOrders();
+    abstract Iterable<OrderViewDto> getAllBuyerOrders(Long buyerId);
 }

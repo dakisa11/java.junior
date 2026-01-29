@@ -55,10 +55,10 @@ public class OrderController {
         return "order/index";
     }
 
-    @GetMapping
-    public String viewBuyerOrder(Model model) {
-        model.addAttribute("orderList", this.orderManager.getAllOrders());
-        return "order/orders/{id}";
+    @GetMapping("/{buyerId}/orders")
+    public String viewBuyerOrder(@PathVariable Long buyerId, Model model) {
+        model.addAttribute("orderList", this.orderManager.getAllBuyerOrders(buyerId));
+        return "order/orders";
     }
 
     @GetMapping("/addnew")
