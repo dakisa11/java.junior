@@ -3,7 +3,6 @@ package hr.abysalto.hiring.api.junior.controller;
 import hr.abysalto.hiring.api.junior.components.DatabaseInitializer;
 import hr.abysalto.hiring.api.junior.manager.OrderManager;
 import hr.abysalto.hiring.api.junior.model.Order;
-import hr.abysalto.hiring.api.junior.manager.BuyerManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
