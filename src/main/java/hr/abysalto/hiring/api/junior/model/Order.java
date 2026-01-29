@@ -18,29 +18,26 @@ public class Order {
 	@Id
 	private Long orderNr;
 	private Long buyerId;
-	//private Buyer buyer;
+
+
 	@Transient
 	private OrderStatus orderStatus;
-
 	@Column("order_status")
 	public String getOrderStatus() {
 		return orderStatus != null ? orderStatus.toString() : null;
 	}
-
 	public void setOrderStatus(String orderStatusString) {
 		this.orderStatus = OrderStatus.fromString(orderStatusString);
 	}
 
 	private LocalDateTime orderTime;
-	private List<OrderItem> orderItems;
+
 	@Transient
 	private PaymentOption paymentOption;
-
 	@Column("payment_option")
 	public String getPaymentOption() {
 		return paymentOption != null ? paymentOption.toString() : null;
 	}
-
 	public void setPaymentOption(String paymentOptionString) {
 		this.paymentOption = PaymentOption.fromString(paymentOptionString);
 	}

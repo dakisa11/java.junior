@@ -55,6 +55,12 @@ public class OrderController {
         return "order/index";
     }
 
+    @GetMapping
+    public String viewBuyerOrder(Model model) {
+        model.addAttribute("orderList", this.orderManager.getAllOrders());
+        return "order/orders/{id}";
+    }
+
     @GetMapping("/addnew")
     public String addNewEmployee(Model model) {
         Order order = new Order();

@@ -60,7 +60,7 @@ public class DatabaseInitializer {
 			 CREATE TABLE order_item (
 				 order_item_id INT auto_increment PRIMARY KEY,
 				 order_nr int NOT NULL,
-				 item_nt smallint NOT NULL,
+				 item_nr smallint NOT NULL,
 				 name varchar(100) NOT NULL,
 				 quantity smallint NOT NULL,
 				 price decimal,

@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Id;
 public class OrderItem {
 	@Id
 	private Long orderItemId;
-	private Long orderId;
+	private Long orderNr;
 	private Short itemNr;
 	private String name;
 	private Short quantity;

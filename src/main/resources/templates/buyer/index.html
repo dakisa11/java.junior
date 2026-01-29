@@ -28,7 +28,7 @@
             <td th:text="${buyer.lastName}"></td>
             <td th:text="${buyer.title}"></td>
             <td>
-                <a th:href="@{/order/orders/{id}(id=${buyer.buyerId})}"
+                <a th:href="@{/order/index/{id}(id=${buyer.buyerId})}"
                    class="btn btn-optional">See orders</a>
                 <a th:href="@{/buyer/showFormForUpdate/{id}(id=${buyer.buyerId})}"
                     class="btn btn-primary">Update</a>

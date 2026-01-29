@@ -1,8 +1,12 @@
 package hr.abysalto.hiring.api.junior.manager;
+import java.util.ArrayList;
 import java.util.List;
+
 import hr.abysalto.hiring.api.junior.model.Order;
+import hr.abysalto.hiring.api.junior.model.OrderItem;
 import hr.abysalto.hiring.api.junior.model.OrderStatus;
 import hr.abysalto.hiring.api.junior.repository.BuyerAddressRepository;
+import hr.abysalto.hiring.api.junior.repository.OrderItemRepository;
 import hr.abysalto.hiring.api.junior.repository.OrderRepository;
 import hr.abysalto.hiring.api.junior.dto.OrderViewDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,29 +18,42 @@ public class OrderManagerImpl implements OrderManager {
     private OrderRepository orderRepository;
     @Autowired
     private BuyerAddressRepository buyerAddressRepository;
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
-    public OrderManagerImpl(OrderRepository orderRepository, BuyerAddressRepository buyerAddressRepository) {
+    public OrderManagerImpl(OrderRepository orderRepository,
+                            BuyerAddressRepository buyerAddressRepository,
+                            OrderItemRepository orderItemRepository) {
         this.orderRepository = orderRepository;
         this.buyerAddressRepository = buyerAddressRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     @Override
-    public Iterable<OrderViewDto> getAllOrders() {
+    public List<OrderViewDto> getAllOrders() {
         List<Order> orders = (List<Order>)orderRepository.findAll();
+        List<OrderViewDto> result = new ArrayList<>();
 
-        return orders.stream().map(order ->  {
-            OrderViewDto dto = new OrderViewDto();
-            dto.setOrderNr(order.getOrderNr());
-            dto.setOrderStatus(OrderStatus.fromString(order.getOrderStatus()));
-            dto.setOrderTime(order.getOrderTime());
-            dto.setTotalPrice(order.getTotalPrice());
+        for (Order order : orders) {
+            OrderViewDto orderViewDto = new OrderViewDto();
+
+            orderViewDto.setOrderNr(order.getOrderNr());
+            orderViewDto.setOrderStatus(OrderStatus.fromString(order.getOrderStatus()));
+            orderViewDto.setOrderTime(order.getOrderTime());
+            orderViewDto.setTotalPrice(order.getTotalPrice());
 
             buyerAddressRepository
                     .findById(order.getDeliveryAddressId())
-                    .ifPresent(dto::setDeliveryAddress);
+                    .ifPresent(orderViewDto::setDeliveryAddress);
 
-            return dto;
-        }).toList();
+            List<OrderItem> orderItems =
+                    orderItemRepository.findByOrderNr(order.getOrderNr());
+            orderViewDto.setOrderItems(orderItems);
+
+            result.add(orderViewDto);
+            }
+
+        return result;
     }
 
     @Override
@@ -52,5 +69,10 @@ public class OrderManagerImpl implements OrderManager {
     @Override
     public void deleteById(Long id) {
         this.orderRepository.deleteById(id);
+    }
+
+    @Override
+    public Iterable<OrderViewDto> getAllBuyerOrders() {
+
     }
 }
