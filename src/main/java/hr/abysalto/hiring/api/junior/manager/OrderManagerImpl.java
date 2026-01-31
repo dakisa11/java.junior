@@ -2,10 +2,8 @@ package hr.abysalto.hiring.api.junior.manager;
 import java.util.ArrayList;
 import java.util.List;
 
-import hr.abysalto.hiring.api.junior.model.Order;
-import hr.abysalto.hiring.api.junior.model.OrderItem;
-import hr.abysalto.hiring.api.junior.model.OrderStatus;
-import hr.abysalto.hiring.api.junior.model.PaymentOption;
+import hr.abysalto.hiring.api.junior.model.*;
+import hr.abysalto.hiring.api.junior.manager.BuyerManager;
 import hr.abysalto.hiring.api.junior.repository.BuyerAddressRepository;
 import hr.abysalto.hiring.api.junior.repository.OrderItemRepository;
 import hr.abysalto.hiring.api.junior.repository.OrderRepository;
@@ -15,19 +13,19 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class OrderManagerImpl implements OrderManager {
-    @Autowired
-    private OrderRepository orderRepository;
-    @Autowired
-    private BuyerAddressRepository buyerAddressRepository;
-    @Autowired
-    private OrderItemRepository orderItemRepository;
+    private final OrderRepository orderRepository;
+    private final BuyerAddressRepository buyerAddressRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final BuyerManager buyerManager;
 
     public OrderManagerImpl(OrderRepository orderRepository,
                             BuyerAddressRepository buyerAddressRepository,
-                            OrderItemRepository orderItemRepository) {
+                            OrderItemRepository orderItemRepository,
+                            BuyerManager buyerManager) {
         this.orderRepository = orderRepository;
         this.buyerAddressRepository = buyerAddressRepository;
         this.orderItemRepository = orderItemRepository;
+        this.buyerManager = buyerManager;
     }
 
     @Override
@@ -37,8 +35,9 @@ public class OrderManagerImpl implements OrderManager {
     }
 
     @Override
-    public void save(Order order) {
+    public Order save(Order order) {
         this.orderRepository.save(order);
+        return order;
     }
 
     @Override
@@ -56,11 +55,23 @@ public class OrderManagerImpl implements OrderManager {
         return getOrderViewDtos(orders);
     }
 
+    @Override
+    public void updateStatus(Long orderNr, String status) {
+        if (status == null || status.isBlank()) return;
+        OrderStatus os = OrderStatus.fromString(status);
+        if (os == null) return;
+
+        orderRepository.updateStatus(orderNr, os.toString());
+    }
+
     private List<OrderViewDto> getOrderViewDtos(List<Order> orders) {
         List<OrderViewDto> result = new ArrayList<>();
 
         for (Order order : orders) {
             OrderViewDto orderViewDto = new OrderViewDto();
+
+            Buyer buyer = buyerManager.getById(order.getBuyerId());
+            orderViewDto.setBuyerName(buyer.getFirstName() + ' ' + buyer.getLastName());
 
             orderViewDto.setOrderNr(order.getOrderNr());
             orderViewDto.setOrderId(order.getBuyerId());
@@ -68,15 +79,18 @@ public class OrderManagerImpl implements OrderManager {
             orderViewDto.setOrderTime(order.getOrderTime());
             orderViewDto.setPaymentOption(PaymentOption.fromString(order.getPaymentOption()));
             orderViewDto.setContactNumber(order.getContactNumber());
-            orderViewDto.setCurrency(order.getCurrency());
+            orderViewDto.setCurrency("EUR");
             orderViewDto.setTotalPrice(order.getTotalPrice());
+            orderViewDto.setNotes(order.getNotes());
 
             buyerAddressRepository
                     .findById(order.getDeliveryAddressId())
                     .ifPresent(orderViewDto::setDeliveryAddress);
 
             List<OrderItem> orderItems =
-                    orderItemRepository.findByOrderNr(order.getOrderNr());
+                    orderItemRepository.findByOrderNr(order.getOrderNr())
+                            .stream().filter(i -> i.getQuantity() > 0)
+                            .toList();
             orderViewDto.setOrderItems(orderItems);
 
             result.add(orderViewDto);

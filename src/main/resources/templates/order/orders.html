@@ -3,76 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <title>Buyer Orders</title>
+
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+          crossorigin="anonymous">
 </head>
 <body>
 
-<h1>Orders</h1>
+    <div class="container my-4">
 
-<div th:if="${#lists.isEmpty(orderList)}">
-    <p>No orders found.</p>
-</div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Orders</h2>
+            <a th:href="@{/buyer/}" class="btn btn-secondary btn-sm">
+                Back to buyers
+            </a>
+            <a th:href="@{/order/addnew/}" class="btn btn-secondary btn-sm">
+                    New order
+            </a>
+        </div>
 
-<div th:each="order : ${orderList}" class="order-box">
+        <div th:if="${#lists.isEmpty(orderList)}" class="alert alert-info">
+            No orders found for this buyer.
+        </div>
 
-    <h2>
-        Order #
-        <span th:text="${order.orderNr}"></span>
-    </h2>
+        <div th:each="order : ${orderList}" class="card mb-4 shadow-sm">
 
-    <p>
-        <strong>Status:</strong>
-        <span th:text="${order.orderStatus}"></span>
-    </p>
+            <div class="card-header d-flex justify-content-between">
+                <strong>
+                    Order #
+                    <span th:text="${order.orderNr}"></span>
+                    – <span th:text="${order.buyerName}"></span>
+                </strong>
 
-    <p>
-        <strong>Order time:</strong>
-        <span th:text="${order.orderTime}"></span>
-    </p>
+                <form class="form-inline"
+                      th:action="@{/order/{id}/status(id=${order.orderNr})}"
+                      method="post">
 
-    <p>
-        <strong>Total price:</strong>
-        <span th:text="${order.totalPrice}"></span>
-        <span>EUR</span>
-    </p>
+                    <input type="hidden" name="redirect" value="/order/"/>
 
-    <h3>Delivery address</h3>
+                    <select name="status" class="form-control form-control-sm mr-2">
+                        <option value="WAITING_FOR_CONFIRMATION"
+                                th:selected="${order.orderStatus?.toString() == 'WAITING_FOR_CONFIRMATION'}">
+                            WAITING_FOR_CONFIRMATION
+                        </option>
+                        <option value="PREPARING"
+                                th:selected="${order.orderStatus?.toString() == 'PREPARING'}">
+                            PREPARING
+                        </option>
+                        <option value="DONE"
+                                th:selected="${order.orderStatus?.toString() == 'DONE'}">
+                            DONE
+                        </option>
+                    </select>
 
-    <div th:if="${order.deliveryAddress != null}">
-        <p>
-            <span th:text="${order.deliveryAddress.street}"></span>
-            <span th:text="${order.deliveryAddress.homeNumber}"></span>,
-            <span th:text="${order.deliveryAddress.city}"></span>
-        </p>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                        Save
+                    </button>
+                </form>
+            </div>
+
+            <div class="card-body">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Order time:</strong>
+                            <span th:text="${#temporals.format(order.orderTime, 'EEEE, dd.MM.yyyy HH:mm')}"></span>
+                        </p>
+                        <p><strong>Payment:</strong>
+                            <span th:text="${order.paymentOption}"></span>
+                        </p>
+                        <p><strong>Contact:</strong>
+                            <span th:text="${order.contactNumber}"></span>
+                        </p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <p><strong>Delivery address:</strong></p>
+                        <p th:if="${order.deliveryAddress != null}">
+                            <span th:text="${order.deliveryAddress.street}"></span>
+                            <span th:text="${order.deliveryAddress.homeNumber}"></span>,
+                            <span th:text="${order.deliveryAddress.city}"></span>
+                        </p>
+                        <p th:if="${order.notes != null}">
+                            <strong>Note:</strong>
+                            <span th:text="${order.notes}"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <h5>Items</h5>
+
+                <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-right">Price</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${order.orderItems}">
+                        <td th:text="${item.itemNr}"></td>
+                        <td th:text="${item.name}"></td>
+                        <td class="text-center" th:text="${item.quantity}"></td>
+                        <td class="text-right" th:text="${#numbers.formatDecimal(item.price, 1, 'COMMA', 2, 'POINT')}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="text-right">
+                    <strong>Total:</strong>
+                    <span th:text="${#numbers.formatDecimal(order.totalPrice, 1, 'COMMA', 2, 'POINT')}"></span>
+                </div>
+
+            </div>
+
     </div>
-
-    <div th:if="${order.deliveryAddress == null}">
-        <p>No delivery address</p>
-    </div>
-
-    <h3>Order items</h3>
-
-    <table>
-        <thead>
-        <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Quantity</th>
-            <th>Price</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="item : ${order.orderItems}">
-            <td th:text="${item.itemNr}"></td>
-            <td th:text="${item.name}"></td>
-            <td th:text="${item.quantity}"></td>
-            <td th:text="${item.price}"></td>
-        </tr>
-        </tbody>
-    </table>
-
-</div>
-
-<a href="/buyer">⬅ Back to buyers</a>
-
 </body>
 </html>

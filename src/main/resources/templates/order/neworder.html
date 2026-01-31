@@ -1,53 +1,180 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title><!DOCTYPE html>
-        <html lang="en" xmlns:th="http://www.thymeleaf.org">
-        <head>
-        <meta charset="ISO-8859-1">
-        <title>Employee Management Subsystem</title>
+    <title>Create Order</title>
+
     <link rel="stylesheet"
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
           crossorigin="anonymous">
 </head>
 <body>
-<div class="form-box">
-    <form th:action="@{/orders}" method="post">
 
-        <label>Buyer ID</label>
-        <input type="number" name="buyerId" required/>
+<div class="container my-5" style="max-width: 600px;">
 
-        <label>Order status</label>
-        <select name="orderStatus">
-            <option value="CREATED">CREATED</option>
-            <option value="PAID">PAID</option>
-            <option value="SHIPPED">SHIPPED</option>
-        </select>
+    <h3 class="mb-4">Create New Order</h3>
 
-        <label>Payment option</label>
-        <select name="paymentOption">
-            <option value="CASH">CASH</option>
-            <option value="CARD">CARD</option>
-        </select>
+    <form th:action="@{/order/save}" th:object="${order}" method="post">
+        <div class="form-group">
+            <label>Buyer</label>
+            <select name="buyerId" class="form-control" required>
+                <option value="">-- Select buyer --</option>
+                <option th:each="buyer : ${buyerList}"
+                        th:value="${buyer.buyerId}"
+                        th:text="${buyer.firstName + ' ' + buyer.lastName}">
+                </option>
+            </select>
+        </div>
 
-        <label>Delivery address ID</label>
-        <input type="number" name="deliveryAddressId" required/>
+        <div class="form-group">
+            <label>Order status</label>
+            <select name="orderStatus" class="form-control">
+                <option value="WAITING_FOR_CONFIRMATION">WAITING_FOR_CONFIRMATION</option>
+                <option value="PREPARING">PREPARING</option>
+                <option value="DONE">DONE</option>
+            </select>
+        </div>
 
-        <label>Contact number</label>
-        <input type="text" name="contactNumber"/>
+        <div class="form-group">
+            <label>Payment option</label>
+            <select name="paymentOption" class="form-control">
+                <option value="CASH">CASH</option>
+                <option value="CARD_UPFRONT">CARD_UPFRONT</option>
+                <option value="CARD_ON_DELIVERY">CARD_ON_DELIVERY</option>
+            </select>
+        </div>
 
-        <label>Currency</label>
-        <input type="text" name="currency" value="EUR"/>
+        <hr/>
 
-        <label>Total price</label>
-        <input type="number" step="0.01" name="totalPrice"/>
+        <h5>Delivery Address</h5>
 
-        <button type="submit">Create order</button>
+        <div class="form-group">
+            <label>Street</label>
+            <input type="text" name="street" class="form-control" required/>
+        </div>
+
+        <div class="form-group">
+            <label>Home number</label>
+            <input type="text" name="homeNumber" class="form-control" required/>
+        </div>
+
+        <div class="form-group">
+            <label>City</label>
+            <input type="text" name="city" class="form-control" required/>
+        </div>
+
+        <hr/>
+
+        <div class="form-group">
+            <label>Contact number</label>
+            <input type="text" name="contactNumber" class="form-control"/>
+        </div>
+
+        <div class="form-group">
+            <label>Currency</label>
+            <select name="currency" id="currencySelect" class="form-control" required>
+                <option value="EUR" selected>EUR (€)</option>
+                <option value="USD">USD ($)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="CHF">CHF (CHF)</option>
+                <option value="HRK">HRK (kn)</option>
+            </select>
+            <input type="hidden" name="currency" id="currency" value="EUR">
+        </div>
+
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea name="notes" class="form-control" rows="3"
+                      placeholder="Optional note..."></textarea>
+        </div>
+
+        <button type="button" class="btn btn-outline-primary mb-3" data-toggle="modal" data-target="#itemsModal">
+            Choose items (popup)
+        </button>
+
+        <div class="alert alert-info py-2">
+            Tip: set quantity & click <strong>Apply</strong>, then submit order.
+        </div>
+
+        <div class="form-group">
+            <label>Total price</label>
+            <input type="text" id="totalPriceDisplay" class="form-control" readonly/>
+            <input type="hidden" name="totalPrice" id="totalPrice">
+        </div>
+
+        <button type="submit" class="btn btn-info col-2">
+            Save order
+        </button>
+        <button th:href="@{/order/}" class="btn btn-info col-2">
+            Cancel
+        </button>
+
+        <div class="modal fade" id="itemsModal" tabindex="-1" role="dialog"
+                                        aria-labelledby="itemsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="itemsModalLabel">Select menu items</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <table class="table table-sm table-bordered">
+                            <thead class="thead-light">
+                            <tr>
+                                <th>Item</th>
+                                <th class="text-right">Price</th>
+                                <th style="width:160px;">Quantity</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="m : ${menuItems}">
+                                <td>
+                                    <strong th:text="${m.itemName}"></strong>
+                                    <div class="text-muted small" th:text="${m.itemNr}"></div>
+                                </td>
+                                <td class="text-right">
+                                    <span class="item-price"
+                                          th:text="${m.price}"
+                                          th:attr="data-base-price=${m.price}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           min="0"
+                                           value="0"
+                                           class="form-control form-control-sm qty-input"
+                                           th:attr="name=${'qty__' + m.itemNr}"
+                                           data-itemnr="${m.itemNr}">
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <small class="text-muted">
+                            Set quantity > 0 for items you want. Zero means not included.
+                        </small>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary"
+                                data-dismiss="modal">Apply</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </form>
-    <a th:href="@{/order/}" class="btn btn-primary btn-sm mb-3">
-        Back to list of orders</a>
+
 </div>
+<script th:src="@{/js/order-form.js}"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
 </body>
 </html>

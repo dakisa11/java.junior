@@ -1,8 +1,16 @@
 package hr.abysalto.hiring.api.junior.controller;
 
+import hr.abysalto.hiring.api.junior.Service.MenuService;
 import hr.abysalto.hiring.api.junior.components.DatabaseInitializer;
+import hr.abysalto.hiring.api.junior.dto.MenuItemDto;
 import hr.abysalto.hiring.api.junior.manager.OrderManager;
+import hr.abysalto.hiring.api.junior.manager.BuyerManager;
+import hr.abysalto.hiring.api.junior.model.BuyerAddress;
 import hr.abysalto.hiring.api.junior.model.Order;
+import hr.abysalto.hiring.api.junior.model.OrderItem;
+import hr.abysalto.hiring.api.junior.repository.BuyerAddressRepository;
+import hr.abysalto.hiring.api.junior.repository.OrderItemRepository;
+import hr.abysalto.hiring.api.junior.repository.OrderRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,23 +23,33 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.ui.ModelMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Tag(name = "Orders", description = "for handling orders")
 @RequestMapping("order")
 @Controller
 public class OrderController {
-
+    @Autowired
+    private OrderRepository orderRepository;
     @Autowired
     private OrderManager orderManager;
-    //@Autowired
-    //private BuyerManager buyerManager;
+    @Autowired
+    private BuyerManager buyerManager;
     @Autowired
     private DatabaseInitializer databaseInitializer;
+    @Autowired
+    private BuyerAddressRepository buyerAddressRepository;
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+    @Autowired
+    private MenuService menuService;
 
     @Operation(summary = "Get all buyers", responses = {
             @ApiResponse(description = "Success", responseCode = "200", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Order.class)))),
@@ -62,15 +80,72 @@ public class OrderController {
     }
 
     @GetMapping("/addnew")
-    public String addNewEmployee(Model model) {
+    public String addNewOrder(Model model) {
         Order order = new Order();
         model.addAttribute("order", order);
+        model.addAttribute("buyerList", buyerManager.getAllBuyers());
+        model.addAttribute("menuItems", menuService.getMenuItems());
         return "order/neworder";
     }
 
     @PostMapping("/save")
-    public String saveOrder(@ModelAttribute("order") Order order) {
-        this.orderManager.save(order);
+    public String saveOrder(
+            @ModelAttribute("order") Order order,
+            @RequestParam String street,
+            @RequestParam String homeNumber,
+            @RequestParam String city,
+            @RequestParam String orderStatus,
+            @RequestParam String paymentOption,
+            @RequestParam String notes,
+            @RequestParam MultiValueMap<String, String> parameters, ModelMap modelMap)
+    {
+        if (orderStatus == null || orderStatus.isBlank()) {
+            order.setOrderStatus(orderStatus);
+        }
+        if (paymentOption == null ||paymentOption.isBlank()) {
+            order.setPaymentOption(paymentOption);
+        }
+
+        BuyerAddress addr = new BuyerAddress();
+        addr.setStreet(street);
+        addr.setHomeNumber(homeNumber);
+        addr.setCity(city);
+        BuyerAddress savedAddr = buyerAddressRepository.save(addr);
+        order.setDeliveryAddressId(savedAddr.getBuyerAddressId());
+
+        order.setNotes(notes);
+        order.setOrderTime(LocalDateTime.now());
+
+        Order savedOrder = orderManager.save(order);
+
+        Map<Integer, MenuItemDto> menuMap =
+                menuService.getMenuItems().stream()
+                .collect(Collectors.toMap(
+                        MenuItemDto::getItemNr
+                        ,m -> m
+                ));
+
+        for(String key: parameters.keySet()) {
+            if(!key.startsWith("qty__"))continue;
+
+            Integer itemNr = Integer.valueOf(key.substring(5));
+            int quantity = Integer.parseInt(Objects.requireNonNull(parameters.getFirst(key)));
+
+            if (quantity < 0)continue;
+
+            MenuItemDto menuItemDto = menuMap.get(itemNr);
+            if (menuItemDto == null)continue;
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrderNr(savedOrder.getOrderNr());
+            orderItem.setItemNr(itemNr);
+            orderItem.setName(menuItemDto.getItemName());
+            orderItem.setQuantity((short) quantity);
+            orderItem.setPrice(menuItemDto.getPrice());
+
+            orderItemRepository.save(orderItem);
+        }
+
         return "redirect:/order/";
     }
 
@@ -82,9 +157,20 @@ public class OrderController {
     }
 
     @GetMapping("/deleteOrder/{id}")
-    public String deleteById(@PathVariable(value = "id") long id) {
-        this.orderManager.deleteById(id);
+    public String deleteById ( @PathVariable(value = "id") long id){
+        orderItemRepository.deleteByOrderNr(id);  // prvo child
+        orderRepository.deleteById(id);           // onda parent
         return "redirect:/order/";
+    }
+
+    @PostMapping("/{orderNr}/status")
+    public String updateOrderStatus(
+            @PathVariable Long orderNr,
+            @RequestParam("status") String status,
+            @RequestParam(value = "redirect", required = false, defaultValue = "/order/") String redirect
+    ) {
+        orderManager.updateStatus(orderNr, status);
+        return "redirect:" + redirect;
     }
 
 }
