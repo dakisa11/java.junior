@@ -14,6 +14,8 @@ import java.util.List;
 @Data
 public class OrderViewDto {
     @Setter
+    private String buyerName;
+    @Setter
     private Long orderNr;
     @Setter
     private Long orderId;
@@ -30,6 +32,8 @@ public class OrderViewDto {
     private String contactNumber;
     @Setter
     private String currency;
+    @Setter
+    private String notes;
     private List<OrderItem> orderItems;
 
 }

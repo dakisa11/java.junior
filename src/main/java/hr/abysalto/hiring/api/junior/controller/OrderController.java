@@ -2,7 +2,10 @@ package hr.abysalto.hiring.api.junior.controller;
 
 import hr.abysalto.hiring.api.junior.components.DatabaseInitializer;
 import hr.abysalto.hiring.api.junior.manager.OrderManager;
+import hr.abysalto.hiring.api.junior.manager.BuyerManager;
+import hr.abysalto.hiring.api.junior.model.BuyerAddress;
 import hr.abysalto.hiring.api.junior.model.Order;
+import hr.abysalto.hiring.api.junior.repository.BuyerAddressRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,11 +18,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @Tag(name = "Orders", description = "for handling orders")
 @RequestMapping("order")
@@ -28,10 +30,12 @@ public class OrderController {
 
     @Autowired
     private OrderManager orderManager;
-    //@Autowired
-    //private BuyerManager buyerManager;
+    @Autowired
+    private BuyerManager buyerManager;
     @Autowired
     private DatabaseInitializer databaseInitializer;
+    @Autowired
+    private BuyerAddressRepository buyerAddressRepository;
 
     @Operation(summary = "Get all buyers", responses = {
             @ApiResponse(description = "Success", responseCode = "200", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Order.class)))),
@@ -62,14 +66,39 @@ public class OrderController {
     }
 
     @GetMapping("/addnew")
-    public String addNewEmployee(Model model) {
+    public String addNewOrder(Model model) {
         Order order = new Order();
         model.addAttribute("order", order);
+        model.addAttribute("buyerList", buyerManager.getAllBuyers());
         return "order/neworder";
     }
 
     @PostMapping("/save")
-    public String saveOrder(@ModelAttribute("order") Order order) {
+    public String saveOrder(
+            @ModelAttribute("order") Order order,
+            @RequestParam String street,
+            @RequestParam String homeNumber,
+            @RequestParam String city,
+            @RequestParam String orderStatus,
+            @RequestParam String paymentOption,
+            ModelMap modelMap)
+    {
+        if (orderStatus == null || orderStatus.isBlank()) {
+            order.setOrderStatus(orderStatus);
+        }
+        if (paymentOption == null ||paymentOption.isBlank()) {
+            order.setPaymentOption(paymentOption);
+        }
+
+        BuyerAddress addr = new BuyerAddress();
+        addr.setStreet(street);
+        addr.setHomeNumber(homeNumber);
+        addr.setCity(city);
+
+        BuyerAddress savedAddr = buyerAddressRepository.save(addr);
+        order.setDeliveryAddressId(savedAddr.getBuyerAddressId());
+
+        order.setOrderTime(LocalDateTime.now());
         this.orderManager.save(order);
         return "redirect:/order/";
     }

@@ -51,6 +51,7 @@ public class DatabaseInitializer {
 				 contact_number varchar(100) NULL,
 				 currency varchar(50) NULL,
 				 total_price decimal,
+	 			 notes varchar(500) NULL,
 				 CONSTRAINT FK_order_to_buyer FOREIGN KEY (buyer_id) REFERENCES buyer (buyer_id),
 				 CONSTRAINT FK_order_to_delivery_address FOREIGN KEY (delivery_address_id) REFERENCES buyer_address (buyer_address_id)
 			 );
@@ -79,11 +80,16 @@ public class DatabaseInitializer {
 		this.jdbcTemplate.execute("INSERT INTO buyer_address (city, street, home_number) VALUES ('Zagreb', 'Ilica', '25')");
 		this.jdbcTemplate.execute("INSERT INTO buyer_address (city, street, home_number) VALUES ('Split', 'Marmantova', '3')");
 		this.jdbcTemplate.execute("INSERT INTO buyer_address (city, street, home_number) VALUES ('Osijek', 'Vijenac', '113')");
-		this.jdbcTemplate.execute("INSERT INTO orders ( buyer_id, order_status, order_time, payment_option, delivery_address_id, contact_number, currency, total_price)" +
-				                                     " VALUES (1, 'WAITING_FOR_CONFIRMATION', '2026-01-28 18:30:00', 'CASH', 3, '+385991234567', 'EUR', 49.99)");
-		this.jdbcTemplate.execute("INSERT INTO orders ( buyer_id, order_status, order_time, payment_option, delivery_address_id, contact_number, currency, total_price)" +
-												     " VALUES (2, 'PREPARING','2026-01-29 09:15:00', 'CARD_UPFRONT', 1, '+385981112223', 'EUR', 120.50)");
-		this.jdbcTemplate.execute("INSERT INTO orders ( buyer_id, order_status, order_time, payment_option, delivery_address_id, contact_number, currency, total_price)" +
-													 "VALUES (4, 'DONE', '2026-01-27 14:05:00', 'CARD_ON_DELIVERY', 2, '+385991234567', 'USD', 89.00)");
+		this.jdbcTemplate.execute("INSERT INTO orders ( buyer_id, order_status, order_time, payment_option, delivery_address_id, contact_number, currency, total_price, notes)" +
+				                                     " VALUES (1, 'WAITING_FOR_CONFIRMATION', '2026-01-28 18:30:00', 'CASH', 3, '+385991234567', 'EUR', 49.99, 'Kratki opis')");
+		this.jdbcTemplate.execute("INSERT INTO orders ( buyer_id, order_status, order_time, payment_option, delivery_address_id, contact_number, currency, total_price, notes)" +
+												     " VALUES (2, 'PREPARING','2026-01-29 09:15:00', 'CARD_UPFRONT', 1, '+385981112223', 'EUR', 120.50, 'Kratki opis')");
+		this.jdbcTemplate.execute("INSERT INTO orders ( buyer_id, order_status, order_time, payment_option, delivery_address_id, contact_number, currency, total_price, notes)" +
+													 "VALUES (4, 'DONE', '2026-01-27 14:05:00', 'CARD_ON_DELIVERY', 2, '+385991234567', 'USD', 89.00, 'Kratki opis')");
+		this.jdbcTemplate.execute("INSERT INTO orders ( buyer_id, order_status, order_time, payment_option, delivery_address_id, contact_number, currency, total_price, notes)" +
+				" VALUES (1, 'WAITING_FOR_CONFIRMATION', '2026-01-28 18:30:00', 'CASH', 3, '+385991234567', 'EUR', 49.99, 'Kratki opis')");
+		this.jdbcTemplate.execute("INSERT INTO orders ( buyer_id, order_status, order_time, payment_option, delivery_address_id, contact_number, currency, total_price, notes)" +
+				" VALUES (1, 'WAITING_FOR_CONFIRMATION', '2026-01-28 18:30:00', 'CASH', 3, '+385991234567', 'EUR', 49.99, 'Kratki opis')");
+
 	}
 }

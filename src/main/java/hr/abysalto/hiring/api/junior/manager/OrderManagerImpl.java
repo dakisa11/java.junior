@@ -2,10 +2,8 @@ package hr.abysalto.hiring.api.junior.manager;
 import java.util.ArrayList;
 import java.util.List;
 
-import hr.abysalto.hiring.api.junior.model.Order;
-import hr.abysalto.hiring.api.junior.model.OrderItem;
-import hr.abysalto.hiring.api.junior.model.OrderStatus;
-import hr.abysalto.hiring.api.junior.model.PaymentOption;
+import hr.abysalto.hiring.api.junior.model.*;
+import hr.abysalto.hiring.api.junior.manager.BuyerManager;
 import hr.abysalto.hiring.api.junior.repository.BuyerAddressRepository;
 import hr.abysalto.hiring.api.junior.repository.OrderItemRepository;
 import hr.abysalto.hiring.api.junior.repository.OrderRepository;
@@ -15,19 +13,19 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class OrderManagerImpl implements OrderManager {
-    @Autowired
-    private OrderRepository orderRepository;
-    @Autowired
-    private BuyerAddressRepository buyerAddressRepository;
-    @Autowired
-    private OrderItemRepository orderItemRepository;
+    private final OrderRepository orderRepository;
+    private final BuyerAddressRepository buyerAddressRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final BuyerManager buyerManager;
 
     public OrderManagerImpl(OrderRepository orderRepository,
                             BuyerAddressRepository buyerAddressRepository,
-                            OrderItemRepository orderItemRepository) {
+                            OrderItemRepository orderItemRepository,
+                            BuyerManager buyerManager) {
         this.orderRepository = orderRepository;
         this.buyerAddressRepository = buyerAddressRepository;
         this.orderItemRepository = orderItemRepository;
+        this.buyerManager = buyerManager;
     }
 
     @Override
@@ -62,6 +60,9 @@ public class OrderManagerImpl implements OrderManager {
         for (Order order : orders) {
             OrderViewDto orderViewDto = new OrderViewDto();
 
+            Buyer buyer = buyerManager.getById(order.getBuyerId());
+            orderViewDto.setBuyerName(buyer.getFirstName() + ' ' + buyer.getLastName());
+
             orderViewDto.setOrderNr(order.getOrderNr());
             orderViewDto.setOrderId(order.getBuyerId());
             orderViewDto.setOrderStatus(OrderStatus.fromString(order.getOrderStatus()));
@@ -70,6 +71,7 @@ public class OrderManagerImpl implements OrderManager {
             orderViewDto.setContactNumber(order.getContactNumber());
             orderViewDto.setCurrency(order.getCurrency());
             orderViewDto.setTotalPrice(order.getTotalPrice());
+            orderViewDto.setNotes(order.getNotes());
 
             buyerAddressRepository
                     .findById(order.getDeliveryAddressId())

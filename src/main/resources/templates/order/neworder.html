@@ -1,53 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title><!DOCTYPE html>
-        <html lang="en" xmlns:th="http://www.thymeleaf.org">
-        <head>
-        <meta charset="ISO-8859-1">
-        <title>Employee Management Subsystem</title>
+    <title>Create Order</title>
+
     <link rel="stylesheet"
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
           crossorigin="anonymous">
 </head>
 <body>
-<div class="form-box">
-    <form th:action="@{/orders}" method="post">
 
-        <label>Buyer ID</label>
-        <input type="number" name="buyerId" required/>
+<div class="container my-5" style="max-width: 600px;">
 
-        <label>Order status</label>
-        <select name="orderStatus">
-            <option value="CREATED">CREATED</option>
-            <option value="PAID">PAID</option>
-            <option value="SHIPPED">SHIPPED</option>
-        </select>
+    <h3 class="mb-4">Create New Order</h3>
 
-        <label>Payment option</label>
-        <select name="paymentOption">
-            <option value="CASH">CASH</option>
-            <option value="CARD">CARD</option>
-        </select>
+    <form th:action="@{/order/save}" th:object="${order}" method="post">
+        <div class="form-group">
+            <label>Buyer</label>
+            <select name="buyerId" class="form-control" required>
+                <option value="">-- Select buyer --</option>
+                <option th:each="buyer : ${buyerList}"
+                        th:value="${buyer.buyerId}"
+                        th:text="${buyer.firstName + ' ' + buyer.lastName}">
+                </option>
+            </select>
+        </div>
 
-        <label>Delivery address ID</label>
-        <input type="number" name="deliveryAddressId" required/>
+        <div class="form-group">
+            <label>Order status</label>
+            <select name="orderStatus" class="form-control">
+                <option value="WAITING_FOR_CONFIRMATION">WAITING_FOR_CONFIRMATION</option>
+                <option value="PREPARING">PREPARING</option>
+                <option value="DONE">DONE</option>
+            </select>
+        </div>
 
-        <label>Contact number</label>
-        <input type="text" name="contactNumber"/>
+        <div class="form-group">
+            <label>Payment option</label>
+            <select name="paymentOption" class="form-control">
+                <option value="CASH">CASH</option>
+                <option value="CARD_UPFRONT">CARD_UPFRONT</option>
+                <option value="CARD_ON_DELIVERY">CARD_ON_DELIVERY</option>
+            </select>
+        </div>
 
-        <label>Currency</label>
-        <input type="text" name="currency" value="EUR"/>
+        <hr/>
 
-        <label>Total price</label>
-        <input type="number" step="0.01" name="totalPrice"/>
+        <h5>Delivery Address</h5>
 
-        <button type="submit">Create order</button>
+        <div class="form-group">
+            <label>Street</label>
+            <input type="text" name="street" class="form-control" required/>
+        </div>
+
+        <div class="form-group">
+            <label>Home number</label>
+            <input type="text" name="homeNumber" class="form-control" required/>
+        </div>
+
+        <div class="form-group">
+            <label>City</label>
+            <input type="text" name="city" class="form-control" required/>
+        </div>
+
+        <hr/>
+
+        <div class="form-group">
+            <label>Contact number</label>
+            <input type="text" name="contactNumber" class="form-control"/>
+        </div>
+
+        <div class="form-group">
+            <label>Currency</label>
+            <input type="text" name="currency" class="form-control" value="EUR"/>
+        </div>
+
+        <div class="form-group">
+            <label>Total price</label>
+            <input type="number" step="0.01" name="totalPrice" class="form-control"/>
+        </div>
+
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea name="notes" class="form-control" rows="3"
+                      placeholder="Optional note..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-info col-2">
+            Save order
+        </button>
+        <button th:href="@{/order/}" class="btn btn-info col-2">
+            Cancel
+        </button>
+
     </form>
-    <a th:href="@{/order/}" class="btn btn-primary btn-sm mb-3">
-        Back to list of orders</a>
+
 </div>
+
 </body>
 </html>
