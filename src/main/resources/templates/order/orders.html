@@ -11,87 +11,115 @@
 </head>
 <body>
 
-<div class="container my-4">
+    <div class="container my-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Orders</h2>
-        <a th:href="@{/buyer/}" class="btn btn-secondary btn-sm">
-            Back to buyers
-        </a>
-        <a th:href="@{/order/addnew/}" class="btn btn-secondary btn-sm">
-                New order
-        </a>
-    </div>
-
-    <div th:if="${#lists.isEmpty(orderList)}" class="alert alert-info">
-        No orders found for this buyer.
-    </div>
-
-    <div th:each="order : ${orderList}" class="card mb-4 shadow-sm">
-
-        <div class="card-header d-flex justify-content-between">
-            <strong>
-                Order #
-                <span th:text="${order.orderNr}"></span>
-            </strong>
-
-            <span class="badge badge-primary"
-                  th:text="${order.orderStatus}">
-            </span>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Orders</h2>
+            <a th:href="@{/buyer/}" class="btn btn-secondary btn-sm">
+                Back to buyers
+            </a>
+            <a th:href="@{/order/addnew/}" class="btn btn-secondary btn-sm">
+                    New order
+            </a>
         </div>
 
-        <div class="card-body">
+        <div th:if="${#lists.isEmpty(orderList)}" class="alert alert-info">
+            No orders found for this buyer.
+        </div>
 
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <p class="mb-1">
-                        <strong>Order time:</strong>
-                        <span th:text="${order.orderTime}"></span>
-                    </p>
-                    <p class="mb-1">
-                        <strong>Total price:</strong>
-                        <span th:text="${order.totalPrice}"></span> EUR
-                    </p>
-                </div>
+        <div th:each="order : ${orderList}" class="card mb-4 shadow-sm">
 
-                <div class="col-md-6">
-                    <strong>Delivery address:</strong>
-                    <p th:if="${order.deliveryAddress != null}" class="mb-1">
-                        <span th:text="${order.deliveryAddress.street}"></span>
-                        <span th:text="${order.deliveryAddress.homeNumber}"></span>,
-                        <span th:text="${order.deliveryAddress.city}"></span>
-                    </p>
-                    <p th:if="${order.deliveryAddress == null}" class="text-muted mb-1">
-                        No delivery address
-                    </p>
-                </div>
+            <div class="card-header d-flex justify-content-between">
+                <strong>
+                    Order #
+                    <span th:text="${order.orderNr}"></span>
+                    – <span th:text="${order.buyerName}"></span>
+                </strong>
+
+                <form class="form-inline"
+                      th:action="@{/order/{id}/status(id=${order.orderNr})}"
+                      method="post">
+
+                    <input type="hidden" name="redirect" value="/order/"/>
+
+                    <select name="status" class="form-control form-control-sm mr-2">
+                        <option value="WAITING_FOR_CONFIRMATION"
+                                th:selected="${order.orderStatus?.toString() == 'WAITING_FOR_CONFIRMATION'}">
+                            WAITING_FOR_CONFIRMATION
+                        </option>
+                        <option value="PREPARING"
+                                th:selected="${order.orderStatus?.toString() == 'PREPARING'}">
+                            PREPARING
+                        </option>
+                        <option value="DONE"
+                                th:selected="${order.orderStatus?.toString() == 'DONE'}">
+                            DONE
+                        </option>
+                    </select>
+
+                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                        Save
+                    </button>
+                </form>
             </div>
 
-            <h5>Order items</h5>
+            <div class="card-body">
 
-            <table class="table table-sm table-bordered">
-                <thead class="thead-light">
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th class="text-center">Quantity</th>
-                    <th class="text-right">Price</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="item : ${order.orderItems}">
-                    <td th:text="${item.itemNr}"></td>
-                    <td th:text="${item.name}"></td>
-                    <td class="text-center" th:text="${item.quantity}"></td>
-                    <td class="text-right" th:text="${item.price}"></td>
-                </tr>
-                </tbody>
-            </table>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Order time:</strong>
+                            <span th:text="${#temporals.format(order.orderTime, 'EEEE, dd.MM.yyyy HH:mm')}"></span>
+                        </p>
+                        <p><strong>Payment:</strong>
+                            <span th:text="${order.paymentOption}"></span>
+                        </p>
+                        <p><strong>Contact:</strong>
+                            <span th:text="${order.contactNumber}"></span>
+                        </p>
+                    </div>
 
-        </div>
+                    <div class="col-md-6">
+                        <p><strong>Delivery address:</strong></p>
+                        <p th:if="${order.deliveryAddress != null}">
+                            <span th:text="${order.deliveryAddress.street}"></span>
+                            <span th:text="${order.deliveryAddress.homeNumber}"></span>,
+                            <span th:text="${order.deliveryAddress.city}"></span>
+                        </p>
+                        <p th:if="${order.notes != null}">
+                            <strong>Note:</strong>
+                            <span th:text="${order.notes}"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <h5>Items</h5>
+
+                <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-right">Price</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${order.orderItems}">
+                        <td th:text="${item.itemNr}"></td>
+                        <td th:text="${item.name}"></td>
+                        <td class="text-center" th:text="${item.quantity}"></td>
+                        <td class="text-right" th:text="${#numbers.formatDecimal(item.price, 1, 'COMMA', 2, 'POINT')}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="text-right">
+                    <strong>Total:</strong>
+                    <span th:text="${#numbers.formatDecimal(order.totalPrice, 1, 'COMMA', 2, 'POINT')}"></span>
+                </div>
+
+            </div>
+
     </div>
-
-</div>
-
 </body>
 </html>

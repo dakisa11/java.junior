@@ -72,18 +72,34 @@
 
         <div class="form-group">
             <label>Currency</label>
-            <input type="text" name="currency" class="form-control" value="EUR"/>
-        </div>
-
-        <div class="form-group">
-            <label>Total price</label>
-            <input type="number" step="0.01" name="totalPrice" class="form-control"/>
+            <select name="currency" id="currencySelect" class="form-control" required>
+                <option value="EUR" selected>EUR (€)</option>
+                <option value="USD">USD ($)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="CHF">CHF (CHF)</option>
+                <option value="HRK">HRK (kn)</option>
+            </select>
+            <input type="hidden" name="currency" id="currency" value="EUR">
         </div>
 
         <div class="form-group">
             <label>Notes</label>
             <textarea name="notes" class="form-control" rows="3"
                       placeholder="Optional note..."></textarea>
+        </div>
+
+        <button type="button" class="btn btn-outline-primary mb-3" data-toggle="modal" data-target="#itemsModal">
+            Choose items (popup)
+        </button>
+
+        <div class="alert alert-info py-2">
+            Tip: set quantity & click <strong>Apply</strong>, then submit order.
+        </div>
+
+        <div class="form-group">
+            <label>Total price</label>
+            <input type="text" id="totalPriceDisplay" class="form-control" readonly/>
+            <input type="hidden" name="totalPrice" id="totalPrice">
         </div>
 
         <button type="submit" class="btn btn-info col-2">
@@ -93,9 +109,72 @@
             Cancel
         </button>
 
+        <div class="modal fade" id="itemsModal" tabindex="-1" role="dialog"
+                                        aria-labelledby="itemsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="itemsModalLabel">Select menu items</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <table class="table table-sm table-bordered">
+                            <thead class="thead-light">
+                            <tr>
+                                <th>Item</th>
+                                <th class="text-right">Price</th>
+                                <th style="width:160px;">Quantity</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="m : ${menuItems}">
+                                <td>
+                                    <strong th:text="${m.itemName}"></strong>
+                                    <div class="text-muted small" th:text="${m.itemNr}"></div>
+                                </td>
+                                <td class="text-right">
+                                    <span class="item-price"
+                                          th:text="${m.price}"
+                                          th:attr="data-base-price=${m.price}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           min="0"
+                                           value="0"
+                                           class="form-control form-control-sm qty-input"
+                                           th:attr="name=${'qty__' + m.itemNr}"
+                                           data-itemnr="${m.itemNr}">
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <small class="text-muted">
+                            Set quantity > 0 for items you want. Zero means not included.
+                        </small>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary"
+                                data-dismiss="modal">Apply</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </form>
 
 </div>
-
+<script th:src="@{/js/order-form.js}"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
 </body>
 </html>

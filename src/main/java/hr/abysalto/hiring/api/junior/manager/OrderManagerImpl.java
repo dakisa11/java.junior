@@ -35,8 +35,9 @@ public class OrderManagerImpl implements OrderManager {
     }
 
     @Override
-    public void save(Order order) {
+    public Order save(Order order) {
         this.orderRepository.save(order);
+        return order;
     }
 
     @Override
@@ -54,6 +55,15 @@ public class OrderManagerImpl implements OrderManager {
         return getOrderViewDtos(orders);
     }
 
+    @Override
+    public void updateStatus(Long orderNr, String status) {
+        if (status == null || status.isBlank()) return;
+        OrderStatus os = OrderStatus.fromString(status);
+        if (os == null) return;
+
+        orderRepository.updateStatus(orderNr, os.toString());
+    }
+
     private List<OrderViewDto> getOrderViewDtos(List<Order> orders) {
         List<OrderViewDto> result = new ArrayList<>();
 
@@ -69,7 +79,7 @@ public class OrderManagerImpl implements OrderManager {
             orderViewDto.setOrderTime(order.getOrderTime());
             orderViewDto.setPaymentOption(PaymentOption.fromString(order.getPaymentOption()));
             orderViewDto.setContactNumber(order.getContactNumber());
-            orderViewDto.setCurrency(order.getCurrency());
+            orderViewDto.setCurrency("EUR");
             orderViewDto.setTotalPrice(order.getTotalPrice());
             orderViewDto.setNotes(order.getNotes());
 
@@ -78,7 +88,9 @@ public class OrderManagerImpl implements OrderManager {
                     .ifPresent(orderViewDto::setDeliveryAddress);
 
             List<OrderItem> orderItems =
-                    orderItemRepository.findByOrderNr(order.getOrderNr());
+                    orderItemRepository.findByOrderNr(order.getOrderNr())
+                            .stream().filter(i -> i.getQuantity() > 0)
+                            .toList();
             orderViewDto.setOrderItems(orderItems);
 
             result.add(orderViewDto);
