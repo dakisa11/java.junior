@@ -9,6 +9,7 @@ import hr.abysalto.hiring.api.junior.model.BuyerAddress;
 import hr.abysalto.hiring.api.junior.model.Order;
 import hr.abysalto.hiring.api.junior.model.OrderItem;
 import hr.abysalto.hiring.api.junior.repository.BuyerAddressRepository;
+import hr.abysalto.hiring.api.junior.repository.BuyerRepository;
 import hr.abysalto.hiring.api.junior.repository.OrderItemRepository;
 import hr.abysalto.hiring.api.junior.repository.OrderRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,15 +22,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Tag(name = "Orders", description = "for handling orders")
@@ -50,6 +52,8 @@ public class OrderController {
     private OrderItemRepository orderItemRepository;
     @Autowired
     private MenuService menuService;
+    @Autowired
+    private BuyerRepository buyerRepository;
 
     @Operation(summary = "Get all buyers", responses = {
             @ApiResponse(description = "Success", responseCode = "200", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Order.class)))),
@@ -68,14 +72,20 @@ public class OrderController {
     }
 
     @GetMapping("/")
-    public String viewHomePage(Model model) {
-        model.addAttribute("orderList", this.orderManager.getAllOrders());
+    public String viewHomePage(
+            @RequestParam(value = "sort", required = false, defaultValue = "asc") String sort,
+            Model model
+    ){
+        model.addAttribute("orderList", this.orderManager.getAllOrdersSortedByTotal(sort));
+        model.addAttribute("sort", sort);
+
         return "order/index";
     }
 
     @GetMapping("/{buyerId}/orders")
-    public String viewBuyerOrder(@PathVariable Long buyerId, Model model) {
+    public String viewBuyerOrder(@PathVariable Long buyerId, Model model){
         model.addAttribute("orderList", this.orderManager.getAllBuyerOrders(buyerId));
+        model.addAttribute("buyerId", buyerId);
         return "order/orders";
     }
 
@@ -91,32 +101,44 @@ public class OrderController {
     @PostMapping("/save")
     public String saveOrder(
             @ModelAttribute("order") Order order,
-            @RequestParam String street,
-            @RequestParam String homeNumber,
-            @RequestParam String city,
-            @RequestParam String orderStatus,
-            @RequestParam String paymentOption,
-            @RequestParam String notes,
-            @RequestParam MultiValueMap<String, String> parameters, ModelMap modelMap)
-    {
-        if (orderStatus == null || orderStatus.isBlank()) {
+
+            //create
+            @RequestParam(required = false) String street,
+            @RequestParam(required = false) String homeNumber,
+            @RequestParam(required = false) String city,
+
+            //update
+            @RequestParam(required = false) Long selectedAddressId,
+            @RequestParam(required = false) String newStreet,
+            @RequestParam(required = false) String newHomeNumber,
+            @RequestParam(required = false) String newCity,
+
+            @RequestParam(required = false) String orderStatus,
+            @RequestParam(required = false) String paymentOption,
+            @RequestParam(required = false) String notes,
+
+            @RequestParam(required = false) MultiValueMap<String, String> parameters
+    ){
+        if (orderStatus != null && !orderStatus.isBlank()) {
             order.setOrderStatus(orderStatus);
         }
-        if (paymentOption == null ||paymentOption.isBlank()) {
+        if (paymentOption != null && !paymentOption.isBlank()) {
             order.setPaymentOption(paymentOption);
         }
-
-        BuyerAddress addr = new BuyerAddress();
-        addr.setStreet(street);
-        addr.setHomeNumber(homeNumber);
-        addr.setCity(city);
-        BuyerAddress savedAddr = buyerAddressRepository.save(addr);
-        order.setDeliveryAddressId(savedAddr.getBuyerAddressId());
-
         order.setNotes(notes);
-        order.setOrderTime(LocalDateTime.now());
 
-        Order savedOrder = orderManager.save(order);
+        if (order.getOrderNr() == null) {
+            order.setOrderTime(LocalDateTime.now());
+        }
+
+        order.setCurrency("EUR");
+
+        Long deliveryAddressId = resolveDeliveryAddressId(
+                selectedAddressId,
+                newStreet, newHomeNumber, newCity,
+                street, homeNumber, city
+        );
+        order.setDeliveryAddressId(deliveryAddressId);
 
         Map<Integer, MenuItemDto> menuMap =
                 menuService.getMenuItems().stream()
@@ -125,11 +147,15 @@ public class OrderController {
                         ,m -> m
                 ));
 
+        List<OrderItem> newItems = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
         for(String key: parameters.keySet()) {
             if(!key.startsWith("qty__"))continue;
 
             Integer itemNr = Integer.valueOf(key.substring(5));
-            int quantity = Integer.parseInt(Objects.requireNonNull(parameters.getFirst(key)));
+            String qty = parameters.getFirst(key);
+            int quantity = qty == null ? 0 : Integer.parseInt(qty);
 
             if (quantity < 0)continue;
 
@@ -137,22 +163,83 @@ public class OrderController {
             if (menuItemDto == null)continue;
 
             OrderItem orderItem = new OrderItem();
-            orderItem.setOrderNr(savedOrder.getOrderNr());
+
             orderItem.setItemNr(itemNr);
             orderItem.setName(menuItemDto.getItemName());
             orderItem.setQuantity((short) quantity);
             orderItem.setPrice(menuItemDto.getPrice());
 
+            newItems.add(orderItem);
+
+            total = total.add(orderItem.getPrice().multiply(BigDecimal.valueOf(quantity)));
+        }
+
+        order.setTotalPrice(total);
+
+        Order savedOrder = orderManager.save(order);
+
+        orderItemRepository.deleteByOrderNr(savedOrder.getOrderNr());
+        for(OrderItem orderItem : newItems){
+            orderItem.setOrderNr(savedOrder.getOrderNr());
             orderItemRepository.save(orderItem);
         }
 
         return "redirect:/order/";
     }
 
+    private Long resolveDeliveryAddressId(
+            Long selectedAddressId,
+            String newStreet, String newHomeNumber, String newCity,
+            String street, String homeNumber, String city
+    ){
+        boolean hasNew =
+                newStreet != null && !newStreet.isBlank() &&
+                newHomeNumber != null && !newHomeNumber.isBlank() &&
+                newCity != null && !newCity.isBlank();
+
+        if (hasNew) {
+            BuyerAddress buyerAddress = new BuyerAddress();
+            buyerAddress.setStreet(newStreet.trim());
+            buyerAddress.setHomeNumber(newHomeNumber.trim());
+            buyerAddress.setCity(newCity.trim());
+            return buyerAddressRepository.save(buyerAddress).getBuyerAddressId();
+        }
+
+        if(selectedAddressId != null) {
+            return selectedAddressId;
+        }
+
+        boolean hasCreatedAddress =
+                street != null && !street.isBlank() &&
+                homeNumber != null && !homeNumber.isBlank() &&
+                city != null && !city.isBlank();
+
+        if (hasCreatedAddress) {
+            BuyerAddress buyerAddress = new BuyerAddress();
+            buyerAddress.setStreet(street.trim());
+            buyerAddress.setHomeNumber(homeNumber.trim());
+            buyerAddress.setCity(city.trim());
+            return buyerAddressRepository.save(buyerAddress).getBuyerAddressId();
+        }
+
+        throw new IllegalArgumentException("Delivery address is required.");
+    }
+
     @GetMapping("/showFormForUpdate/{id}")
     public String updateForm(@PathVariable(value = "id") long id, Model model) {
         Order order = this.orderManager.getById(id);
         model.addAttribute("order", order);
+
+        model.addAttribute("buyerList", buyerManager.getAllBuyers());
+        model.addAttribute("addressList", buyerAddressRepository.findAll());
+        model.addAttribute("menuItems", menuService.getMenuItems());
+
+        Map<Integer, Short> qtyMap = new HashMap<>();
+        for (OrderItem orderItem: orderItemRepository.findByOrderNr(order.getOrderNr())) {
+            qtyMap.put(orderItem.getItemNr(), orderItem.getQuantity());
+        }
+        model.addAttribute("qtyMap", qtyMap);
+
         return "order/updateorder";
     }
 

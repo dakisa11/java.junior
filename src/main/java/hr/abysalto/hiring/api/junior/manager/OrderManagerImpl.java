@@ -1,4 +1,5 @@
 package hr.abysalto.hiring.api.junior.manager;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,6 +65,18 @@ public class OrderManagerImpl implements OrderManager {
         orderRepository.updateStatus(orderNr, os.toString());
     }
 
+    @Override
+    public List<OrderViewDto> getAllOrdersSortedByTotal(String direction){
+        List<Order> orders;
+
+        if("desc".equalsIgnoreCase(direction)){
+            orders = orderRepository.findAllOrdersByTotalPriceDesc();
+        }else{
+            orders = orderRepository.findAllOrdersByTotalPriceAsc();
+        }
+        return getOrderViewDtos(orders);
+    }
+
     private List<OrderViewDto> getOrderViewDtos(List<Order> orders) {
         List<OrderViewDto> result = new ArrayList<>();
 
@@ -71,8 +84,11 @@ public class OrderManagerImpl implements OrderManager {
             OrderViewDto orderViewDto = new OrderViewDto();
 
             Buyer buyer = buyerManager.getById(order.getBuyerId());
-            orderViewDto.setBuyerName(buyer.getFirstName() + ' ' + buyer.getLastName());
-
+            if (buyer.getTitle() != null) {
+                orderViewDto.setBuyerName(buyer.getTitle() + ' ' + buyer.getFirstName() + ' ' + buyer.getLastName());
+            }else{
+                orderViewDto.setBuyerName(buyer.getFirstName() + ' ' + buyer.getLastName());
+            }
             orderViewDto.setOrderNr(order.getOrderNr());
             orderViewDto.setOrderId(order.getBuyerId());
             orderViewDto.setOrderStatus(OrderStatus.fromString(order.getOrderStatus()));
