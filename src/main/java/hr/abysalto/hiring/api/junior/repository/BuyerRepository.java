@@ -1,6 +1,7 @@
 package hr.abysalto.hiring.api.junior.repository;
 
 import hr.abysalto.hiring.api.junior.model.Buyer;
+
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;

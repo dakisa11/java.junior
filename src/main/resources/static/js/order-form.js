@@ -55,7 +55,7 @@
         const totalEUR = calculateTotal();
 
         const hiddenTotal = document.getElementById("totalPrice");
-        if(hiddenTotal)hiddenTotal.value = totalEUR.toFixed();
+        if(hiddenTotal)hiddenTotal.value = totalEUR.toFixed(2);
 
         const currency = getSelectedCurrency();
         const rate = exchangeRates[currency] || 1.0;

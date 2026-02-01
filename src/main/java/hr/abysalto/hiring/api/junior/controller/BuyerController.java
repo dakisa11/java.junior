@@ -3,12 +3,14 @@ package hr.abysalto.hiring.api.junior.controller;
 import hr.abysalto.hiring.api.junior.components.DatabaseInitializer;
 import hr.abysalto.hiring.api.junior.manager.BuyerManager;
 import hr.abysalto.hiring.api.junior.model.Buyer;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,10 +28,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class BuyerController {
 
-	@Autowired
-	private BuyerManager buyerManager;
-	@Autowired
-	private DatabaseInitializer databaseInitializer;
+	@Autowired private BuyerManager buyerManager;
+	@Autowired private DatabaseInitializer databaseInitializer;
 
 	@Operation(summary = "Get all buyers", responses = {
 			@ApiResponse(description = "Success", responseCode = "200", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Buyer.class)))),

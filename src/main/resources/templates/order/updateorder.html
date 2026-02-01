@@ -1,27 +1,272 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="hr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="ISO-8859-1">
-    <title>Order Management Subsystem</title>
+    <meta charset="UTF-8">
+    <title>Update Order</title>
 
     <link rel="stylesheet"
-          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          crossorigin="anonymous">
 </head>
 <body>
-<div class="container">
-    <h1>Order Management Subsystem</h1>
-    <hr>
-    <h2>Update existing order</h2>
 
-    <form action="#" th:action="@{/order/save}" th:object="${order}"
-          method="POST">
+<div class="container my-5" style="max-width: 900px;">
 
-        <button type="submit" class="btn btn-info col-2"> Update order</button>
-    </form>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Update order</h3>
+        <a th:href="@{/order/}" class="btn btn-secondary btn-sm">Back</a>
+    </div>
 
-    <hr>
+    <div class="card shadow-sm">
+        <div class="card-body">
 
-    <a th:href = "@{/order/}"> Back to list of orders</a>
+            
+            <form th:action="@{/order/update/{id}(id=${order.orderNr})}"
+                  th:object="${order}"
+                  method="post">
+
+                
+                <input type="hidden" th:field="*{orderNr}"/>
+
+                
+                <input type="hidden" th:field="*{currency}"/>
+
+                <div class="form-group">
+                    <label>Buyer</label>
+                    <select class="form-control" th:field="*{buyerId}" required>
+                        <option value="">-- Select buyer --</option>
+                        <option th:each="b : ${buyerList}"
+                                th:value="${b.buyerId}"
+                                th:text="${b.firstName + ' ' + b.lastName}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Order status</label>
+                        <select class="form-control" th:field="*{orderStatus}">
+                            <option value="WAITING_FOR_CONFIRMATION">WAITING_FOR_CONFIRMATION</option>
+                            <option value="PREPARING">PREPARING</option>
+                            <option value="DONE">DONE</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label>Payment option</label>
+                        <select class="form-control" th:field="*{paymentOption}">
+                            <option value="CASH">CASH</option>
+                            <option value="CARD_UPFRONT">CARD_UPFRONT</option>
+                            <option value="CARD_ON_DELIVERY">CARD_ON_DELIVERY</option>
+                        </select>
+                    </div>
+                </div>
+
+                
+                <div class="form-group">
+                    <label>Order time</label>
+                    <div class="form-control-plaintext">
+                        <span th:text="${order.orderTime != null ? #temporals.format(order.orderTime, 'dd.MM.yyyy HH:mm') : '-'}"></span>
+                    </div>
+                </div>
+
+                <hr/>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-2">Delivery address</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="toggleNewAddressBtn">
+                        Add new address
+                    </button>
+                </div>
+
+                
+                <div class="form-group" id="existingAddressBlock">
+                    <label>Select existing address</label>
+
+                    
+                    <select class="form-control" name="existingAddressId">
+                        <option value="">-- keep current --</option>
+                        <option th:each="a : ${addressList}"
+                                th:value="${a.buyerAddressId}"
+                                th:selected="${a.buyerAddressId == order.deliveryAddressId}"
+                                th:text="${a.street + ' ' + a.homeNumber + ', ' + a.city}">
+                        </option>
+                    </select>
+
+                    <small class="text-muted">
+                        If you choose nothing, current order address stays unchanged.
+                    </small>
+                </div>
+
+                
+                <div id="newAddressBlock" style="display:none;">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Street</label>
+                            
+                            <input class="form-control" name="street" placeholder="e.g. Ilica">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Home number</label>
+                            <input class="form-control" name="homeNumber" placeholder="e.g. 10A">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>City</label>
+                            <input class="form-control" name="city" placeholder="e.g. Zagreb">
+                        </div>
+                    </div>
+
+                    <small class="text-muted">
+                        If all 3 fields are filled, a new address will be created and used.
+                    </small>
+                </div>
+
+                <hr/>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Contact number</label>
+                        <input class="form-control" th:field="*{contactNumber}">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Notes</label>
+                        <input class="form-control" th:field="*{notes}">
+                    </div>
+                </div>
+
+                
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Display currency</label>
+                        <select id="currencySelect" class="form-control">
+                            <option value="EUR" selected>EUR</option>
+                            <option value="USD">USD</option>
+                            <option value="GBP">GBP</option>
+                            <option value="CHF">CHF</option>
+                            <option value="HRK">HRK</option>
+                        </select>
+                        <small class="text-muted">Only for display. Stored currency is always EUR.</small>
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label>Total price (display)</label>
+                        <input type="text" class="form-control" id="totalPriceDisplay" readonly>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <h5 class="mb-2">Order items</h5>
+                    <button type="button" class="btn btn-outline-primary btn-sm"
+                            data-toggle="modal" data-target="#itemsModal">
+                        Edit items
+                    </button>
+                </div>
+
+                <div class="alert alert-info py-2">
+                    Tip: change quantities in modal and click <strong>Apply</strong>. Total updates automatically.
+                </div>
+
+                <div class="form-group">
+                    <label>Total price (EUR stored)</label>
+                    
+                    <input type="number" step="0.01"
+                           class="form-control"
+                           id="totalPrice"
+                           th:field="*{totalPrice}"
+                           readonly>
+                    <small class="text-muted">Calculated from items. Stored in EUR.</small>
+                </div>
+
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-primary mr-2">Save changes</button>
+                    <a th:href="@{/order/}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+
+                
+                <div class="modal fade" id="itemsModal" tabindex="-1" role="dialog" aria-labelledby="itemsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="itemsModalLabel">Select menu items</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+
+                            <div class="modal-body">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th style="width:90px;">Item #</th>
+                                        <th>Name</th>
+                                        <th class="text-right" style="width:140px;">Price</th>
+                                        <th style="width:160px;">Quantity</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="m : ${menuItems}">
+                                        <td th:text="${m.itemNr}"></td>
+                                        <td th:text="${m.itemName}"></td>
+                                        <td class="text-right">
+                                            <span class="item-price"
+                                                  th:text="${#numbers.formatDecimal(m.price, 1, 'COMMA', 2, 'POINT')}"
+                                                  th:attr="data-base-price=${m.price}">
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <input type="number"
+                                                   min="0"
+                                                   class="form-control qty-input"
+                                                   th:attr="name=${'qty__' + m.itemNr}"
+                                                   th:value="${qtyMap.containsKey(m.itemNr) ? qtyMap.get(m.itemNr) : 0}">
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                                <small class="text-muted">Set quantity > 0 to include an item.</small>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" data-dismiss="modal">Apply</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
 </div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" crossorigin="anonymous"></script>
+
+
+<script th:src="@{/js/order-form.js}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('toggleNewAddressBtn');
+        const existing = document.getElementById('existingAddressBlock');
+        const fresh = document.getElementById('newAddressBlock');
+
+        btn.addEventListener('click', function () {
+            const showNew = fresh.style.display === 'none';
+            fresh.style.display = showNew ? 'block' : 'none';
+            existing.style.display = showNew ? 'none' : 'block';
+            btn.textContent = showNew ? 'Use existing address' : 'Add new address';
+        });
+        
+        const hiddenCurrency = document.querySelector('input[name="currency"]');
+        if (hiddenCurrency) hiddenCurrency.value = 'EUR';
+    });
+</script>
+
 </body>
 </html>

@@ -19,6 +19,21 @@
             New order
         </a>
     </div>
+    <div class="d-flex justify-content-end mb-3">
+        <div class="btn-group btn-group-sm">
+            <a class="btn btn-outline-primary"
+               th:classappend="${sort == 'asc'} ? ' active'"
+               th:href="@{/order/(sort='asc')}">
+                Total ↑
+            </a>
+
+            <a class="btn btn-outline-primary"
+               th:classappend="${sort == 'desc'} ? ' active'"
+               th:href="@{/order/(sort='desc')}">
+                Total ↓
+            </a>
+        </div>
+    </div>
     <div th:each="order : ${orderList}" class="card mb-4">
 
         <div class="card-header d-flex justify-content-between">

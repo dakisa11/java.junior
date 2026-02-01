@@ -2,6 +2,7 @@ package hr.abysalto.hiring.api.junior.manager;
 
 import hr.abysalto.hiring.api.junior.model.Buyer;
 import hr.abysalto.hiring.api.junior.repository.BuyerRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

@@ -52,7 +52,7 @@ public class DatabaseInitializer {
 				 currency varchar(50) NULL,
 				 total_price DECIMAL(10,2),
 	 			 notes varchar(500) NULL,
-				 CONSTRAINT FK_order_to_buyer FOREIGN KEY (buyer_id) REFERENCES buyer (buyer_id),
+				 CONSTRAINT FK_order_to_buyer FOREIGN KEY (buyer_id) REFERENCES buyer (buyer_id) ON DELETE CASCADE,
 				 CONSTRAINT FK_order_to_delivery_address FOREIGN KEY (delivery_address_id) REFERENCES buyer_address (buyer_address_id)
 			 );
  		""");
@@ -66,7 +66,7 @@ public class DatabaseInitializer {
 				 quantity smallint NOT NULL,
 				 price DECIMAL(10,2),
 				 CONSTRAINT UC_order_items UNIQUE (order_item_id, order_nr),
-				 CONSTRAINT FK_order_item_to_order FOREIGN KEY (order_nr) REFERENCES orders (order_nr)
+				 CONSTRAINT FK_order_item_to_order FOREIGN KEY (order_nr) REFERENCES orders (order_nr) ON DELETE CASCADE
 			 );
  		""");
 	}
@@ -77,9 +77,6 @@ public class DatabaseInitializer {
 		this.jdbcTemplate.execute("INSERT INTO buyer (first_name, last_name, title) VALUES ('Jar Jar', 'Binks', NULL)");
 		this.jdbcTemplate.execute("INSERT INTO buyer (first_name, last_name, title) VALUES ('Han', 'Solo', NULL)");
 		this.jdbcTemplate.execute("INSERT INTO buyer (first_name, last_name, title) VALUES ('Leia', 'Organa', 'Princess')");
-		this.jdbcTemplate.execute("INSERT INTO buyer_address (city, street, home_number) VALUES ('Zagreb', 'Ilica', '25')");
-		this.jdbcTemplate.execute("INSERT INTO buyer_address (city, street, home_number) VALUES ('Split', 'Marmantova', '3')");
-		this.jdbcTemplate.execute("INSERT INTO buyer_address (city, street, home_number) VALUES ('Osijek', 'Vijenac', '113')");
 		this.jdbcTemplate.execute("""
 			INSERT INTO buyer_address (city, street, home_number) VALUES
 			('Zagreb', 'Ilica', '10'),
@@ -88,7 +85,6 @@ public class DatabaseInitializer {
 			('Osijek', 'Europska avenija', '3');
 			""");
 
-		//Orders
 		this.jdbcTemplate.execute(
 		"""
 				INSERT INTO orders
