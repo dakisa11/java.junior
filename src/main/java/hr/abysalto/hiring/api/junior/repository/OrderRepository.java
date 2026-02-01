@@ -1,12 +1,11 @@
 package hr.abysalto.hiring.api.junior.repository;
 
 import hr.abysalto.hiring.api.junior.model.Order;
+
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 public interface OrderRepository extends CrudRepository<Order, Long> {

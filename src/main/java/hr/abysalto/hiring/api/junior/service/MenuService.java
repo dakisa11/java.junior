@@ -1,6 +1,7 @@
-package hr.abysalto.hiring.api.junior.Service;
+package hr.abysalto.hiring.api.junior.service;
 
 import hr.abysalto.hiring.api.junior.dto.MenuItemDto;
+
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
